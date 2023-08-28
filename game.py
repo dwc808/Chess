@@ -77,8 +77,8 @@ class Game:
         self._pieces['white_knight_2'] = Knight("white", "knight", (6, 0), "alive")
         self._squares["g1"].set_piece(self._pieces['white_knight_2'])
 
-        self._pieces['black_queen'] = Queen("black", "queen", (3, 4), "alive")
-        self._squares["d5"].set_piece(self._pieces['black_queen'])
+        self._pieces['black_queen'] = Queen("black", "queen", (3, 7), "alive")
+        self._squares["d8"].set_piece(self._pieces['black_queen'])
         self._pieces['white_queen'] = Queen("white", "queen", (3, 0), "alive")
         self._squares["d1"].set_piece(self._pieces['white_queen'])
 
@@ -95,7 +95,7 @@ class Game:
         starter = 0
         y_name = 1
         for letter in "abcdefgh":
-            self._pieces['white_pawn' + str(y_name)] = Pawn("white", "pawn", (starter, 6), "alive")
+            self._pieces['white_pawn' + str(y_name)] = Pawn("white", "pawn", (starter, 1), "alive")
             self._squares[letter + "2"].set_piece(self._pieces['white_pawn' + str(y_name)])
             starter += 1
             y_name += 1
@@ -493,7 +493,22 @@ class Game:
             if check_stop == "break":
                 break
 
+    def get_pawn_moves(self, pawn):
+        """Refreshes the valid moves for a pawn."""
 
+        #clear previous valid moves
+        pawn.clear_valid_moves()
+
+        test_coords = list(pawn.get_position())
+
+        if pawn.get_color() == "black":
+            test_coords[1] -= 1
+            if test_coords[1] >= 0:
+                self.check_square(test_coords, pawn)
+        else:
+            test_coords[1] += 1
+            if test_coords[1] <= 7:
+                self.check_square(test_coords, pawn)
     def refresh_valid_moves(self):
         """Refreshes the valid moves for all pieces in the game. It calls a get_[piece_type]_moves
         method for each piece on the board, which in turn call the check_square method.
@@ -547,6 +562,13 @@ class Game:
         if self._pieces["black_queen"].get_status() == "alive":
             self.get_queen_moves(self._pieces["black_queen"])
 
+        for number in range(1,9):
+            if self._pieces["black_pawn" + str(number)].get_status() == "alive":
+                self.get_pawn_moves(self._pieces["black_pawn" + str(number)])
+
+        for number in range(1,9):
+            if self._pieces["white_pawn" + str(number)].get_status() == "alive":
+                self.get_pawn_moves(self._pieces["white_pawn" + str(number)])
         self._all_valid_moves.clear()
 
         for piece in self._pieces.values():
