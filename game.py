@@ -77,8 +77,8 @@ class Game:
         self._pieces['white_knight_2'] = Knight("white", "knight", (6, 0), "alive")
         self._squares["g1"].set_piece(self._pieces['white_knight_2'])
 
-        self._pieces['black_queen'] = Queen("black", "queen", (3, 7), "alive")
-        self._squares["d8"].set_piece(self._pieces['black_queen'])
+        self._pieces['black_queen'] = Queen("black", "queen", (3, 4), "alive")
+        self._squares["d5"].set_piece(self._pieces['black_queen'])
         self._pieces['white_queen'] = Queen("white", "queen", (3, 0), "alive")
         self._squares["d1"].set_piece(self._pieces['white_queen'])
 
@@ -406,6 +406,94 @@ class Game:
         if test_coords[0] >= 0 and test_coords[1] <= 7:  # test to see if move stays in bounds of board
             self.check_square(test_coords, knight)
 
+    def get_queen_moves(self, queen):
+        """Get the valid moves for a queen piece."""
+
+        # clear previous valid moves
+        queen.clear_valid_moves()
+
+        # horizontal/vertical moves
+        # check up
+        test_coords = list(queen.get_position())  # test coordinates are list so they can be incremented
+
+        while test_coords[1] < 7:
+            test_coords[1] += 1
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        # check down
+        test_coords = list(queen.get_position())
+
+        while test_coords[1] > 0:
+            test_coords[1] -= 1
+            # if the square at test_coords is empty, add that square's coordinates to piece's valid moves
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        # check right
+        test_coords = list(queen.get_position())
+
+        while test_coords[0] < 7:
+            test_coords[0] += 1
+            # if the square at test_coords is empty, add that square's coordinates to piece's valid moves
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        # check left
+        test_coords = list(queen.get_position())
+
+        while test_coords[0] > 0:
+            test_coords[0] -= 1
+            # if the square at test_coords is empty, add that square's coordinates to piece's valid moves
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        #diagonal movement
+        # check northeast
+        test_coords = list(queen.get_position())
+
+        while test_coords[0] < 7 and test_coords[1] < 7:
+            test_coords[0] += 1
+            test_coords[1] += 1
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        # check northwest
+        test_coords = list(queen.get_position())
+
+        while test_coords[0] > 0 and test_coords[1] < 7:
+            test_coords[0] -= 1
+            test_coords[1] += 1
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        # check southeast
+        test_coords = list(queen.get_position())
+
+        while test_coords[0] < 7 and test_coords[1] > 0:
+            test_coords[0] += 1
+            test_coords[1] -= 1
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+        # check southwest
+        test_coords = list(queen.get_position())
+
+        while test_coords[0] > 0 and test_coords[1] > 0:
+            test_coords[0] -= 1
+            test_coords[1] -= 1
+            check_stop = self.check_square(test_coords, queen)
+            if check_stop == "break":
+                break
+
+
     def refresh_valid_moves(self):
         """Refreshes the valid moves for all pieces in the game. It calls a get_[piece_type]_moves
         method for each piece on the board, which in turn call the check_square method.
@@ -417,16 +505,22 @@ class Game:
         if self._pieces["black_castle"].get_status() == "alive":
             self.get_castle_moves(self._pieces["black_castle"])
 
+        if self._pieces["white_castle_2"].get_status() == "alive":
+            self.get_castle_moves(self._pieces["white_castle_2"])
+
+        if self._pieces["black_castle_2"].get_status() == "alive":
+            self.get_castle_moves(self._pieces["black_castle_2"])
+
         if self._pieces["white_bishop"].get_status() == "alive":
             self.get_bishop_moves(self._pieces["white_bishop"])
 
         if self._pieces["white_bishop_2"].get_status() == "alive":
             self.get_bishop_moves(self._pieces["white_bishop_2"])
 
-        if self._pieces["white_castle"].get_status() == "alive":
+        if self._pieces["black_bishop"].get_status() == "alive":
             self.get_bishop_moves(self._pieces["black_bishop"])
 
-        if self._pieces["white_castle"].get_status() == "alive":
+        if self._pieces["black_bishop_2"].get_status() == "alive":
             self.get_bishop_moves(self._pieces["black_bishop_2"])
 
         if self._pieces["white_king"].get_status() == "alive":
@@ -446,6 +540,12 @@ class Game:
 
         if self._pieces["black_knight_2"].get_status() == "alive":
             self.get_knight_moves(self._pieces["black_knight_2"])
+
+        if self._pieces["white_queen"].get_status() == "alive":
+            self.get_queen_moves(self._pieces["white_queen"])
+
+        if self._pieces["black_queen"].get_status() == "alive":
+            self.get_queen_moves(self._pieces["black_queen"])
 
         self._all_valid_moves.clear()
 
@@ -785,3 +885,5 @@ class Pawn(Piece):
 
 game = Game()
 game.print_board()
+game.make_move("b1","a3")
+game.make_move("g1","h3")
