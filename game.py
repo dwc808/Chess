@@ -500,15 +500,58 @@ class Game:
         pawn.clear_valid_moves()
 
         test_coords = list(pawn.get_position())
-
+        #check for simple vertical movement for black pawn
         if pawn.get_color() == "black":
             test_coords[1] -= 1
             if test_coords[1] >= 0:
                 self.check_square(test_coords, pawn)
+        # check for simple vertical movement for white pawn
         else:
             test_coords[1] += 1
             if test_coords[1] <= 7:
                 self.check_square(test_coords, pawn)
+
+        # check for potential captures for black pawn
+        if pawn.get_color() == "black":
+            test_coords = list(pawn.get_position())
+            test_coords[0] -= 1
+            test_coords[1] -= 1
+            diag_square_1 = self.get_square((test_coords[0],test_coords[1]))
+            if diag_square_1 is not None:
+                if diag_square_1.get_piece() is not None:
+                    if diag_square_1.get_piece().get_color() == "white":
+                        self.check_square(test_coords, pawn)
+
+                test_coords = list(pawn.get_position())
+                test_coords[0] += 1
+                test_coords[1] -= 1
+                diag_square_2 = self.get_square((test_coords[0], test_coords[1]))
+                if diag_square_2 is not None:
+                    if diag_square_2.get_piece() is not None:
+                        if diag_square_2.get_piece().get_color() == "white":
+                            self.check_square(test_coords, pawn)
+
+        # check for potential captures for white pawn
+        else:
+            test_coords = list(pawn.get_position())
+            test_coords[0] -= 1
+            test_coords[1] += 1
+            diag_square_1 = self.get_square((test_coords[0], test_coords[1]))
+            if diag_square_1 is not None:
+                if diag_square_1.get_piece() is not None:
+                    if diag_square_1.get_piece().get_color() == "black":
+                        self.check_square(test_coords, pawn)
+
+                test_coords = list(pawn.get_position())
+                test_coords[0] += 1
+                test_coords[1] += 1
+                diag_square_2 = self.get_square((test_coords[0], test_coords[1]))
+                if diag_square_2 is not None:
+                    if diag_square_2.get_piece() is not None:
+                        if diag_square_2.get_piece().get_color() == "black":
+                            self.check_square(test_coords, pawn)
+
+
     def refresh_valid_moves(self):
         """Refreshes the valid moves for all pieces in the game. It calls a get_[piece_type]_moves
         method for each piece on the board, which in turn call the check_square method.
@@ -631,13 +674,6 @@ class Game:
         of the move. If either is, it will reverse the move using the back_up_move method and return
         False. If a move fails for any reason, it returns False, if a move is valid and successful,
         it returns True."""
-
-        # make sure game is still active
-        if self.get_game_state() != "UNFINISHED":
-            if self.get_game_state() == "FINAL_TURN":
-                pass
-            else:
-                return False
 
         # store pieces on the square the player is trying to move from
         piece = self._squares[square_1].get_piece()
@@ -906,6 +942,3 @@ class Pawn(Piece):
         return self._icon
 
 game = Game()
-game.print_board()
-game.make_move("b1","a3")
-game.make_move("g1","h3")
