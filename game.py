@@ -612,7 +612,24 @@ class Game:
         for number in range(1,9):
             if self._pieces["white_pawn" + str(number)].get_status() == "alive":
                 self.get_pawn_moves(self._pieces["white_pawn" + str(number)])
+
         self._all_valid_moves.clear()
+
+        #only update white king moves if king in check
+        if self._pieces["white_king"]._check == True:
+            for piece in self._pieces.values():
+                if piece.get_color() == "black":
+                    self._all_valid_moves.append(piece.get_valid_moves())
+            self._all_valid_moves.append(self._pieces["white_king"].get_valid_moves())
+            return
+
+        #only update black king moves if black king in check
+        if self._pieces["black_king"]._check == True:
+            for piece in self._pieces.values():
+                if piece.get_color() == "white":
+                    self._all_valid_moves.append(piece.get_valid_moves())
+            self._all_valid_moves.append(self._pieces["black_king"].get_valid_moves())
+            return
 
         for piece in self._pieces.values():
             self._all_valid_moves.append(piece.get_valid_moves())
@@ -641,9 +658,14 @@ class Game:
 
         for list in self._all_valid_moves:
             if white_king_position in list:
-                return True
-            if black_king_position in list:
-                return True
+                self._pieces["white_king"]._check = True
+                return
+            elif black_king_position in list:
+                self._pieces["black_king"]._check = True
+                return
+            else:
+                self._pieces["white_king"]._check = False
+                self._pieces["black_king"]._check = False
 
         return False
 
@@ -708,7 +730,7 @@ class Game:
 
         self.refresh_valid_moves()
 
-        # ensure neither king is put in check by the move
+        # ensure own king is not in check
         if self.check_checker() == True:
             self.back_up_move(square_1, square_2, piece, piece_2)
             self.refresh_valid_moves()
@@ -847,6 +869,7 @@ class King(Piece):
             self._icon = "K"
         else:
             self._icon = "K"
+        self._check = False
 
     def get_icon(self):
         """Returns the King's icon in the appropriate color."""
