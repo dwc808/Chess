@@ -63,7 +63,7 @@ class Game:
         self._squares["c8"].set_piece(self._pieces['black_bishop'])
         self._pieces['black_bishop_2'] = Bishop("black", "bishop", (5, 7), "alive")
         self._squares["f8"].set_piece(self._pieces['black_bishop_2'])
-        self._pieces['white_bishop'] = Bishop("white", "bishop", (3, 0), "alive")
+        self._pieces['white_bishop'] = Bishop("white", "bishop", (2, 0), "alive")
         self._squares["c1"].set_piece(self._pieces['white_bishop'])
         self._pieces['white_bishop_2'] = Bishop("white", "bishop", (5, 0), "alive")
         self._squares["f1"].set_piece(self._pieces['white_bishop_2'])
@@ -146,6 +146,10 @@ class Game:
     def get_game_state(self):
         """Returns the current game_state."""
         return self._game_state
+
+    def get_turn(self):
+        """Returns the color of player's turn."""
+        return self._turn
 
     def get_square(self, coords):
         """This method takes a tuple of x,y coordinates and returns the Square object at
@@ -730,11 +734,28 @@ class Game:
 
         self.refresh_valid_moves()
 
-        # ensure own king is not in check
-        if self.check_checker() == True:
-            self.back_up_move(square_1, square_2, piece, piece_2)
-            self.refresh_valid_moves()
-            return False
+
+        # run check checker
+        self.check_checker()
+
+        #if it's white's turn, ensure they didn't put self in check, update moves again if black king in check
+        if self._turn == "white":
+            if self._pieces["white_king"]._check == True:
+                self.back_up_move(square_1, square_2, piece, piece_2)
+                self.refresh_valid_moves()
+                return False
+            if self._pieces["black_king"]._check == True:
+                self.refresh_valid_moves()
+
+        #same set of checks but for black's turn
+        if self._turn == "black":
+            if self._pieces["black_king"]._check == True:
+                self.back_up_move(square_1, square_2, piece, piece_2)
+                self.refresh_valid_moves()
+                return False
+            if self._pieces["white_king"]._check == True:
+                self.refresh_valid_moves()
+
 
         # switch turn
         if self._turn == "white":
@@ -964,4 +985,5 @@ class Pawn(Piece):
         """Returns the Pawn's icon in the appropriate color."""
         return self._icon
 
-game = Game()
+
+
