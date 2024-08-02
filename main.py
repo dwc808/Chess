@@ -30,7 +30,7 @@ chess.make_move('g2', 'g3')
 chess.make_move('h4', 'g3')
 
         #piece can move if they capture checking piece
-chess.make_move('g2', 'g3')
+chess.make_move('h2', 'g3')
 
         #king can move itself out of check TODO
 

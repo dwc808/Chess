@@ -53,8 +53,9 @@ class BasicPlay(unittest.TestCase):
         self.assertEqual(chess.make_move('h4', 'g3'), True)
 
         #piece can move if they capture checking piece
-        self.assertEqual(chess.make_move('g2', 'g3'), True)
+        self.assertEqual(chess.make_move('h2', 'g3'), True)
 
+        #king can move itself out of check TODO
 
     def test_checkmate(self):
         pass

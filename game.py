@@ -746,10 +746,15 @@ class Game:
                         if move not in allowed_moves:
                             piece._valid_moves.remove(move)
 
+        return checking_piece
+
     def refresh_valid_moves(self):
         """Refreshes the valid moves for all pieces in the game. It calls a get_[piece_type]_moves
         method for each piece on the board, which in turn call the check_square method.
         """
+
+        #null value to return if there is no check
+        checking_piece = None
 
         if self._pieces["white_castle"].get_status() == "alive":
             self.get_castle_moves(self._pieces["white_castle"])
@@ -813,7 +818,7 @@ class Game:
 
         #if there is check
         if self._game_state == "CHECK":
-            self.valid_moves_in_check()
+            checking_piece = self.valid_moves_in_check()
 
         for piece in self._pieces.values():
             if piece.get_color() == "white":
@@ -822,8 +827,10 @@ class Game:
                 self._black_valid_moves.append(piece.get_valid_moves())
             self._all_valid_moves.append(piece.get_valid_moves())
 
+        return checking_piece
+
     def back_up_move(self, square_1, square_2, piece_1, piece_2):
-        """This method is called to reverse a move if it has caused a king to be in check."""
+        """This method is called to reverse a player has put its own king in check."""
 
         # put piece 1 back on starting space
         piece_1.set_position(self._squares[square_1].get_coords())
@@ -837,6 +844,8 @@ class Game:
         else:
             self._squares[square_2].set_piece(None)
 
+        self._game_state = "PLAY"
+
     def check_checker(self):
         """This method is called to see if a move has put either king in check. It will return
         True if a king is in check, and False otherwise."""
@@ -847,13 +856,16 @@ class Game:
         for list in self._all_valid_moves:
             if white_king_position in list:
                 self._pieces["white_king"]._check = True
+                self._game_state = "CHECK"
                 return
             elif black_king_position in list:
                 self._pieces["black_king"]._check = True
+                self._game_state = "CHECK"
                 return
             else:
                 self._pieces["white_king"]._check = False
                 self._pieces["black_king"]._check = False
+                self._game_state = "PLAY"
 
         return False
 
@@ -862,10 +874,7 @@ class Game:
         """Called after every move to check if the game state has changed. It will update the game state
         based on the current conditions."""
 
-        if self._pieces["white_king"].in_check() == True or self._pieces["black_king"].in_check() == True:
-            self._game_state = "CHECK"
-        else:
-            self._game_state = "PLAY"
+        pass
 
     def make_move(self, square_1, square_2):
         """This method is the command to move a piece. It takes two parameters, both strings,
@@ -879,6 +888,10 @@ class Game:
         of the move. If either is, it will reverse the move using the back_up_move method and return
         False. If a move fails for any reason, it returns False, if a move is valid and successful,
         it returns True."""
+
+        # refresh valid moves again if game_state is check
+        if self._game_state == "CHECK":
+            checking_piece = self.refresh_valid_moves()
 
         #determine if there is a pawn vulnerable to en_passant
         if self._vulnerable != None:
@@ -941,6 +954,9 @@ class Game:
 
             else:
 
+                if self._game_state == "CHECK":
+                    if piece_2 == checking_piece:
+                        self._game_state = "PLAY"
                 piece_2.set_position((10, 10))
                 piece_2.set_status("dead")
                 self._squares[square_2].get_piece().clear_valid_moves()
@@ -986,10 +1002,6 @@ class Game:
             self._turn = "white"
 
         self.check_game_state()
-
-        #refresh valid moves again if game_state is check
-        if self._game_state == "CHECK":
-            self.refresh_valid_moves()
 
         self.print_board()
         return True
