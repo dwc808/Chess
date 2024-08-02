@@ -158,6 +158,12 @@ class Pawn(Piece):
         else:
             self._icon = "P"
 
+        self.has_moved = "no"
+
     def get_icon(self):
         """Returns the Pawn's icon in the appropriate color."""
         return self._icon
+
+    def get_moved(self):
+        """Returns 'yes' if pawn has moved, 'no' otherwise."""
+        return self.has_moved

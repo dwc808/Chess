@@ -11,8 +11,10 @@ class Game:
         self._game_state = "UNFINISHED"
         self.initialize_squares()
         self.initialize_pieces()
+        self._vulnerable = None
         self.print_board()
         self.refresh_valid_moves()
+
 
     def initialize_squares(self):
         """This method creates the Squares for the board. Each Square is initialized
@@ -504,17 +506,33 @@ class Game:
         #clear previous valid moves
         pawn.clear_valid_moves()
 
+        #check for en passant
+        test_coords = list(pawn.get_position())
+
+        if self.get_square((test_coords[0]-1, test_coords[1])) != None and self.get_square((test_coords[0]-1, test_coords[1])).get_piece() == self._vulnerable:
+            self.check_square((test_coords[0]-1, test_coords[1]), pawn)
+
+        if self.get_square((test_coords[0]+1, test_coords[1])) != None and self.get_square((test_coords[0]+1, test_coords[1])).get_piece() == self._vulnerable:
+            self.check_square((test_coords[0]+1, test_coords[1]), pawn)
+
         test_coords = list(pawn.get_position())
         #check for simple vertical movement for black pawn
         if pawn.get_color() == "black":
             test_coords[1] -= 1
+            self.check_square(test_coords, pawn)
             if test_coords[1] >= 0:
-                self.check_square(test_coords, pawn)
+                if pawn.has_moved == "no" and self.check_square(test_coords, pawn) != "break":
+                    test_coords[1] -=1
+                    self.check_square(test_coords, pawn)
+
         # check for simple vertical movement for white pawn
         else:
             test_coords[1] += 1
+            self.check_square(test_coords, pawn)
             if test_coords[1] <= 7:
-                self.check_square(test_coords, pawn)
+                if pawn.has_moved == "no" and self.check_square(test_coords, pawn) != "break":
+                    test_coords[1] += 1
+                    self.check_square(test_coords, pawn)
 
         # check for potential captures for black pawn
         if pawn.get_color() == "black":
@@ -702,6 +720,12 @@ class Game:
         False. If a move fails for any reason, it returns False, if a move is valid and successful,
         it returns True."""
 
+        #determine if there is a pawn vulnerable to en_passant
+        if self._vulnerable != None:
+            vuln_flag = True
+        else:
+            vuln_flag = False
+
         # store pieces on the square the player is trying to move from
         piece = self._squares[square_1].get_piece()
         piece_2 = self._squares[square_2].get_piece()
@@ -718,18 +742,47 @@ class Game:
         if self._squares[square_2].get_coords() in piece.get_valid_moves():
 
             if self._squares[square_2].get_piece() is None:
+                #special case for handling pawn en passant vulnerability
+                if piece.get_name() == "pawn":
+                    if abs(piece.get_position()[1] - self._squares[square_2].get_coords()[1]) > 1:
+                        self._vulnerable = piece
+                #move
                 self._squares[square_1].set_piece(None)
                 self._squares[square_2].set_piece(piece)
                 piece.set_position(self._squares[square_2].get_coords())
+                if piece.get_name() == "pawn":
+                    if piece.has_moved == "no":
+                        piece.has_moved = "yes"
 
             else:
+
+                # en_passant
+                en_passant = False
+                if piece.get_name() == "pawn":
+                    if piece_2.get_name() == "pawn":
+                        if piece.get_position()[0] == piece_2.get_position()[0]:
+                            en_passant = True
+
+
                 piece_2.set_position((10, 10))
                 piece_2.set_status("dead")
                 self._squares[square_2].get_piece().clear_valid_moves()
                 self._squares[square_1].set_piece(None)
-                self._squares[square_2].set_piece(piece)
-                piece.set_position(self._squares[square_2].get_coords())
+                if en_passant == False:
+                    self._squares[square_2].set_piece(piece)
+                    piece.set_position(self._squares[square_2].get_coords())
+                else:
+                    self._squares[square_2].set_piece(None)
+                    if piece.get_color() == "white":
+                        self.get_square((piece_2.get_position()[0],piece_2.get_position()[1]+1)).set_piece(piece)
+                        piece.set_position((piece_2.get_position()[0],piece_2.get_position()[1]+1))
+                    else:
+                        self.get_square((piece_2.get_position()[0], piece_2.get_position()[1] - 1)).set_piece(piece)
+                        piece.set_position((piece_2.get_position()[0], piece_2.get_position()[1] - 1))
 
+                if piece.get_name() == "pawn":
+                    if piece.has_moved == "no":
+                        piece.has_moved = "yes"
         else:
             return False
 
@@ -757,6 +810,9 @@ class Game:
             if self._pieces["white_king"]._check == True:
                 self.refresh_valid_moves()
 
+        #if there was a vulnerable pawn this turn, undo vulnerability
+        if vuln_flag:
+            self._vulnerable = None
 
         # switch turn
         if self._turn == "white":
