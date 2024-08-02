@@ -510,10 +510,15 @@ class Game:
         test_coords = list(pawn.get_position())
 
         if self.get_square((test_coords[0]-1, test_coords[1])) != None and self.get_square((test_coords[0]-1, test_coords[1])).get_piece() == self._vulnerable:
-            self.check_square((test_coords[0]-1, test_coords[1]), pawn)
-
+            if pawn.get_color() == "white":
+                self.check_square((test_coords[0]-1, test_coords[1]+1), pawn)
+            if pawn.get_color() == "black":
+                self.check_square((test_coords[0] - 1, test_coords[1] - 1), pawn)
         if self.get_square((test_coords[0]+1, test_coords[1])) != None and self.get_square((test_coords[0]+1, test_coords[1])).get_piece() == self._vulnerable:
-            self.check_square((test_coords[0]+1, test_coords[1]), pawn)
+            if pawn.get_color() == "white":
+                self.check_square((test_coords[0]+1, test_coords[1]+1), pawn)
+            if pawn.get_color() == "black":
+                self.check_square((test_coords[0] + 1, test_coords[1] - 1), pawn)
 
         test_coords = list(pawn.get_position())
         #check for simple vertical movement for black pawn
@@ -726,6 +731,8 @@ class Game:
         else:
             vuln_flag = False
 
+        en_passant = False
+
         # store pieces on the square the player is trying to move from
         piece = self._squares[square_1].get_piece()
         piece_2 = self._squares[square_2].get_piece()
@@ -746,6 +753,29 @@ class Game:
                 if piece.get_name() == "pawn":
                     if abs(piece.get_position()[1] - self._squares[square_2].get_coords()[1]) > 1:
                         self._vulnerable = piece
+                #special case for en passant capture
+                if piece.get_name() == "pawn":
+                    if vuln_flag == True:
+                        if piece.get_color() == "white":
+                            capture_coords = (self._squares[square_2].get_coords()[0], self._squares[square_2].get_coords()[1]-1)
+                            capture_square = self.get_square(capture_coords)
+                            if capture_square.get_piece() == self._vulnerable:
+                                piece_2 = self._vulnerable
+                                en_passant = True
+                        if piece.get_color() == "black":
+                            capture_coords = (self._squares[square_2].get_coords()[0], self._squares[square_2].get_coords()[1]+1)
+                            capture_square = self.get_square(capture_coords)
+                            if capture_square.get_piece() == self._vulnerable:
+                                piece_2 = self._vulnerable
+                                en_passant = True
+
+                #en passant - do the capture
+                if en_passant == True:
+                    piece_2.set_position((10, 10))
+                    capture_square.set_piece(None)
+                    piece_2.set_status("dead")
+                    piece_2.clear_valid_moves()
+
                 #move
                 self._squares[square_1].set_piece(None)
                 self._squares[square_2].set_piece(piece)
@@ -756,38 +786,22 @@ class Game:
 
             else:
 
-                # en_passant
-                en_passant = False
-                if piece.get_name() == "pawn":
-                    if piece_2.get_name() == "pawn":
-                        if piece.get_position()[0] == piece_2.get_position()[0]:
-                            en_passant = True
-
-
                 piece_2.set_position((10, 10))
                 piece_2.set_status("dead")
                 self._squares[square_2].get_piece().clear_valid_moves()
                 self._squares[square_1].set_piece(None)
-                if en_passant == False:
-                    self._squares[square_2].set_piece(piece)
-                    piece.set_position(self._squares[square_2].get_coords())
-                else:
-                    self._squares[square_2].set_piece(None)
-                    if piece.get_color() == "white":
-                        self.get_square((piece_2.get_position()[0],piece_2.get_position()[1]+1)).set_piece(piece)
-                        piece.set_position((piece_2.get_position()[0],piece_2.get_position()[1]+1))
-                    else:
-                        self.get_square((piece_2.get_position()[0], piece_2.get_position()[1] - 1)).set_piece(piece)
-                        piece.set_position((piece_2.get_position()[0], piece_2.get_position()[1] - 1))
+                self._squares[square_2].set_piece(piece)
+                piece.set_position(self._squares[square_2].get_coords())
+
 
                 if piece.get_name() == "pawn":
                     if piece.has_moved == "no":
                         piece.has_moved = "yes"
+
         else:
             return False
 
         self.refresh_valid_moves()
-
 
         # run check checker
         self.check_checker()
