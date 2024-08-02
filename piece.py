@@ -73,6 +73,10 @@ class King(Piece):
         """Returns the King's icon in the appropriate color."""
         return self._icon
 
+    def in_check(self):
+        """Returns True if in Check, False otherwise"""
+        return self._check
+
 
 class Castle(Piece):
     """This piece represents the Castle. It has all of the piece data members and methods, plus a new data member,

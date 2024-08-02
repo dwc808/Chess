@@ -27,8 +27,34 @@ class BasicPlay(unittest.TestCase):
         self.assertEqual(chess.make_move('b1', 'c3'), True)
         self.assertEqual(chess.make_move('c8', 'a6'), True)
 
-    def test_check(self):
-        pass
+    def test_check_and_check_mate(self):
+        chess = game.Game()
+        chess.initialize_squares()
+        chess.initialize_pieces()
+        chess.refresh_valid_moves()
+
+        self.assertEqual(chess.make_move('e2', 'e3'), True)
+        self.assertEqual(chess.make_move('d7', 'd6'), True)
+        self.assertEqual(chess.make_move('b1', 'c3'), True)
+        self.assertEqual(chess.make_move('c8', 'g4'), True)
+        # king can't move self into check
+        self.assertEqual(chess.make_move('e1', 'e2'), False)
+
+        self.assertEqual(chess.make_move('f2', 'f4'), True)
+        self.assertEqual(chess.make_move('e7', 'e6'), True)
+        self.assertEqual(chess.make_move('g1', 'f3'), True)
+        self.assertEqual(chess.make_move('d8', 'h4'), True)
+        #can't make any moves that don't address check
+        self.assertEqual(chess.make_move('c3', 'a4'), False)
+        self.assertEqual(chess.make_move('e1', 'f2'), False)
+
+        #piece can move if they enter path of checking piece
+        self.assertEqual(chess.make_move('g2', 'g3'), True)
+        self.assertEqual(chess.make_move('h4', 'g3'), True)
+
+        #piece can move if they capture checking piece
+        self.assertEqual(chess.make_move('g2', 'g3'), True)
+
 
     def test_checkmate(self):
         pass

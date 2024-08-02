@@ -7,8 +7,10 @@ class Game:
         self._squares = {}
         self._pieces = {}
         self._all_valid_moves = []
+        self._white_valid_moves = []
+        self._black_valid_moves = []
         self._turn = "white"
-        self._game_state = "UNFINISHED"
+        self._game_state = "PLAY"
         self.initialize_squares()
         self.initialize_pieces()
         self._vulnerable = None
@@ -282,7 +284,8 @@ class Game:
     def get_king_moves(self, king):
         """This method takes a castle object as a parameter. It will refresh the valid moves
         for that piece, given the current state of the board. It makes use of the check_square
-        method to update the valid moves for the piece.
+        method to update the valid moves for the piece. It does an additional check to ensure
+        that moves that would put it in check are not in its valid moves.
         """
 
         # clear previous valid moves
@@ -339,6 +342,15 @@ class Game:
             test_coords[1] += 1
             test_coords[0] -= 1
             self.check_square(test_coords, king)
+
+        if king.get_color() == "white":
+            for move in king.get_valid_moves():
+                if move in self._black_valid_moves:
+                    king._valid_moves.remove(move)
+        else:
+            for move in king.get_valid_moves():
+                if move in self._white_valid_moves:
+                    king._valid_moves.remove(move)
 
     def get_knight_moves(self, knight):
         """This method takes a knight object as a parameter. It will refresh the valid moves
@@ -579,6 +591,160 @@ class Game:
                         if diag_square_2.get_piece().get_color() == "black":
                             self.check_square(test_coords, pawn)
 
+    def checking_piece(self):
+        """Returns the checking color and piece."""
+
+        black_king = self._pieces["black_king"]
+        white_king = self._pieces["white_king"]
+
+        # determine the checking color
+        if white_king.in_check() == True:
+            checking_player = "black"
+        else:
+            checking_player = "white"
+
+        # determine checking piece
+        if checking_player == "white":
+            for piece in self._pieces.values():
+                if piece.get_color() == "white":
+                    if black_king.get_position() in piece.get_valid_moves():
+                        checking_piece = piece
+                        break
+        else:
+            for piece in self._pieces.values():
+                if piece.get_color() == "black":
+                    if white_king.get_position() in piece.get_valid_moves():
+                        checking_piece = piece
+                        break
+
+        return checking_player, checking_piece
+
+
+    def find_path_to_king(self, piece, checked_king):
+        """Finds the checking piece's path to the king."""
+
+        if piece.get_name() == "queen":
+            path = []
+            path.append(self.bishops_path(piece, checked_king))
+            path.append(self.castles_path(piece, checked_king))
+            return path
+
+        #find bishop's path to king
+        if piece.get_name() == "bishop":
+            return self.bishops_path(piece, checked_king)
+
+        if piece.get_name() == "castle":
+            return self.castles_path(piece, checked_king)
+
+
+    def bishops_path(self, piece, checked_king):
+        """Find's bishop's path to king."""
+
+        piece_coords = list(piece.get_position())
+        king_coords = list(checked_king.get_position())
+        path = []
+
+        if king_coords[0] < piece_coords[0]:
+            if king_coords[1] > piece_coords[1]:
+                # path left up
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[0] -= 1
+                    piece_coords[1] += 1
+                    path.append(piece_coords)
+                return path
+            else:
+                # path left down
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[0] -= 1
+                    piece_coords[1] -= 1
+                    path.append(piece_coords)
+                return path
+        else:
+            if king_coords[1] > piece_coords[1]:
+                # path right up
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[0] += 1
+                    piece_coords[1] += 1
+                    path.append(piece_coords)
+                return path
+            else:
+                # path right down
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[0] += 1
+                    piece_coords[1] -= 1
+                    path.append(piece_coords)
+                return path
+
+    def castles_path(self, piece, checked_king):
+        """Find castle's path to king."""
+        piece_coords = list(piece.get_position())
+        king_coords = list(checked_king.get_position())
+        path = []
+
+        if king_coords[0] == piece_coords[0]:
+            if king_coords[1] < piece_coords[1]:
+                #path down
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[1] -= 1
+                    path.append(piece_coords)
+                return path
+            else:
+                #path up
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[1] += 1
+                    path.append(piece_coords)
+                return path
+        if king_coords[1] == piece_coords[1]:
+            if king_coords[0] < piece_coords[0]:
+                #path left
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[0] -= 1
+                    path.append(piece_coords)
+                return path
+            else:
+                #path right
+                while king_coords[0] != piece_coords[0] and king_coords[1] != piece_coords[1]:
+                    piece_coords[0] += 1
+                    path.append(piece_coords)
+                return path
+
+    def valid_moves_in_check(self):
+        """Updates piece's valid moves to only include those that will end check."""
+
+        #which king is in check
+        if self._pieces["white_king"].in_check() == True:
+            checked_king = self._pieces["white_king"]
+        else:
+            checked_king = self._pieces["black_king"]
+
+        allowed_moves = []
+
+        #get the checking player and piece
+        checking_player, checking_piece = self.checking_piece()
+
+        #allow captures of checking piece
+        allowed_moves.append(checking_piece.get_position())
+
+        #allow blocking moves
+        if checking_piece.get_name() in ("bishop", "queen", "castle"):
+            path = self.find_path_to_king(checking_piece, checked_king)
+            allowed_moves.append(path)
+
+        #remove all moves from white that do not interrupt check
+        if checked_king.get_color() == "white":
+            for piece in self._pieces.values():
+                if piece.get_color() == "white":
+                    for move in piece.get_valid_moves():
+                        if move not in allowed_moves:
+                            piece._valid_moves.remove(move)
+
+        #remove all moves from black that do not interrupt check
+        if checked_king.get_color() == "black":
+            for piece in self._pieces.values():
+                if piece.get_color() == "black":
+                    for move in piece.get_valid_moves():
+                        if move not in allowed_moves:
+                            piece._valid_moves.remove(move)
 
     def refresh_valid_moves(self):
         """Refreshes the valid moves for all pieces in the game. It calls a get_[piece_type]_moves
@@ -642,24 +808,18 @@ class Game:
                 self.get_pawn_moves(self._pieces["white_pawn" + str(number)])
 
         self._all_valid_moves.clear()
+        self._white_valid_moves.clear()
+        self._black_valid_moves.clear()
 
-        #only update white king moves if king in check
-        if self._pieces["white_king"]._check == True:
-            for piece in self._pieces.values():
-                if piece.get_color() == "black":
-                    self._all_valid_moves.append(piece.get_valid_moves())
-            self._all_valid_moves.append(self._pieces["white_king"].get_valid_moves())
-            return
-
-        #only update black king moves if black king in check
-        if self._pieces["black_king"]._check == True:
-            for piece in self._pieces.values():
-                if piece.get_color() == "white":
-                    self._all_valid_moves.append(piece.get_valid_moves())
-            self._all_valid_moves.append(self._pieces["black_king"].get_valid_moves())
-            return
+        #if there is check
+        if self._game_state == "CHECK":
+            self.valid_moves_in_check()
 
         for piece in self._pieces.values():
+            if piece.get_color() == "white":
+                self._white_valid_moves.append(piece.get_valid_moves())
+            if piece.get_color() == "black":
+                self._black_valid_moves.append(piece.get_valid_moves())
             self._all_valid_moves.append(piece.get_valid_moves())
 
     def back_up_move(self, square_1, square_2, piece_1, piece_2):
@@ -697,20 +857,15 @@ class Game:
 
         return False
 
+
     def check_game_state(self):
         """Called after every move to check if the game state has changed. It will update the game state
         based on the current conditions."""
 
-        if self._pieces["white_king"].get_position()[1] == 7:
-            if self._game_state == "FINAL_TURN":
-                if self._pieces["black_king"].get_position()[1] == 7:
-                    self._game_state = "TIE"
-                else:
-                    self._game_state = "WHITE_WON"
-            else:
-                self._game_state = "FINAL_TURN"
-        elif self._pieces["black_king"].get_position()[1] == 7:
-            self._game_state = "BLACK_WON"
+        if self._pieces["white_king"].in_check() == True or self._pieces["black_king"].in_check() == True:
+            self._game_state = "CHECK"
+        else:
+            self._game_state = "PLAY"
 
     def make_move(self, square_1, square_2):
         """This method is the command to move a piece. It takes two parameters, both strings,
@@ -803,17 +958,15 @@ class Game:
 
         self.refresh_valid_moves()
 
-        # run check checker
+        # see if either king is put in check by this move
         self.check_checker()
 
-        #if it's white's turn, ensure they didn't put self in check, update moves again if black king in check
+        #if it's white's turn, ensure they didn't put self in check, reset
         if self._turn == "white":
             if self._pieces["white_king"]._check == True:
                 self.back_up_move(square_1, square_2, piece, piece_2)
                 self.refresh_valid_moves()
                 return False
-            if self._pieces["black_king"]._check == True:
-                self.refresh_valid_moves()
 
         #same set of checks but for black's turn
         if self._turn == "black":
@@ -821,8 +974,6 @@ class Game:
                 self.back_up_move(square_1, square_2, piece, piece_2)
                 self.refresh_valid_moves()
                 return False
-            if self._pieces["white_king"]._check == True:
-                self.refresh_valid_moves()
 
         #if there was a vulnerable pawn this turn, undo vulnerability
         if vuln_flag:
@@ -835,6 +986,10 @@ class Game:
             self._turn = "white"
 
         self.check_game_state()
+
+        #refresh valid moves again if game_state is check
+        if self._game_state == "CHECK":
+            self.refresh_valid_moves()
 
         self.print_board()
         return True
