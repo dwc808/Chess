@@ -739,15 +739,35 @@ class Game:
 
         #remove all moves from white that do not interrupt check
         if checked_king.get_color() == "white":
+            self._white_valid_moves.clear()
             for piece in self._pieces.values():
                 if piece.get_color() == "white":
-                    piece._valid_moves = [move for move in piece._valid_moves if move in allowed_moves]
+                    #separate case for king - remove moves IN path
+                    if piece == checked_king:
+                        piece._valid_moves = [move for move in piece._valid_moves if move not in allowed_moves]
+                        self._white_valid_moves.append(piece._valid_moves)
+                    else:
+                        piece._valid_moves = [move for move in piece._valid_moves if move in allowed_moves]
+                        self._white_valid_moves.append(piece._valid_moves)
 
         #remove all moves from black that do not interrupt check
         if checked_king.get_color() == "black":
+            self._black_valid_moves.clear()
             for piece in self._pieces.values():
                 if piece.get_color() == "black":
-                    piece._valid_moves = [move for move in piece._valid_moves if move in allowed_moves]
+                    if piece == checked_king:
+                        piece._valid_moves = [move for move in piece._valid_moves if move not in allowed_moves]
+                        self._black_valid_moves.append(piece._valid_moves)
+                    else:
+                        piece._valid_moves = [move for move in piece._valid_moves if move in allowed_moves]
+                        self._black_valid_moves.append(piece._valid_moves)
+
+        #update valid moves collections
+        self._all_valid_moves.clear()
+        for move in self._white_valid_moves:
+            self._all_valid_moves.append(move)
+        for move in self._black_valid_moves:
+            self._all_valid_moves.append(move)
 
         return checking_piece
 
