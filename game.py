@@ -625,8 +625,14 @@ class Game:
 
         if piece.get_name() == "queen":
             path = []
-            path.append(self.bishops_path(piece, checked_king))
-            path.append(self.castles_path(piece, checked_king))
+            bish = self.bishops_path(piece, checked_king)
+            if bish != None:
+                for move in bish:
+                    path.append(move)
+            cast =  self.castles_path(piece, checked_king)
+            if cast != None:
+                for move in cast:
+                    path.append(move)
             return path
 
         #find bishop's path to king
@@ -728,7 +734,9 @@ class Game:
         #allow blocking moves
         if checking_piece.get_name() in ("bishop", "queen", "castle"):
             path = self.find_path_to_king(checking_piece, checked_king)
-            allowed_moves.append(path)
+            for move in path:
+                allowed_moves.append(move)
+
 
         #remove all moves from white that do not interrupt check
         if checked_king.get_color() == "white":
