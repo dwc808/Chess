@@ -108,13 +108,26 @@ class SpecialMoves(unittest.TestCase):
     def test_revive(self):
         pass
 
-#Class Invalid_moves(unittest.TestCase):
+class InvalidMoves(unittest.TestCase):
+    """Test moves that should be disallowed."""
 
- #   def test_invalid_pawn_captures:
-  #      pass
+    def test_invalid_pawn_captures(self):
 
-   # def test_invalid_bqc_captures:
-    #    pass
+        chess = game.Game()
+        chess.initialize_squares()
+        chess.initialize_pieces()
+        chess.refresh_valid_moves()
+        self.assertEqual(chess.make_move('b2', 'b3'), True)
+        self.assertEqual(chess.make_move('e7', 'e5'), True)
+        self.assertEqual(chess.make_move('g1', 'h3'), True)
+        self.assertEqual(chess.make_move('d7', 'd5'), True)
+        self.assertEqual(chess.make_move('b1', 'c3'), True)
+        self.assertEqual(chess.make_move('c7', 'c6'), True)
+        self.assertEqual(chess.make_move('c3', 'e4'), True)
+        self.assertEqual(chess.make_move('e5', 'e4'), False)
+
+    def test_invalid_bqc_captures(self):
+        pass
 
 
 if __name__ == '__main__':

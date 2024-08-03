@@ -536,20 +536,30 @@ class Game:
         #check for simple vertical movement for black pawn
         if pawn.get_color() == "black":
             test_coords[1] -= 1
-            self.check_square(test_coords, pawn)
+            # make sure empty - no capture
+            if self.get_square((test_coords[0], test_coords[1])).get_piece() == None:
+                pawn.add_valid_move((test_coords[0], test_coords[1]))
             if test_coords[1] >= 0:
+                #check for initial two square jump
                 if pawn.has_moved == "no" and self.check_square(test_coords, pawn) != "break":
                     test_coords[1] -=1
-                    self.check_square(test_coords, pawn)
+                    #make sure empty - no capture
+                    if self.get_square((test_coords[0],test_coords[1])).get_piece() == None:
+                        pawn.add_valid_move((test_coords[0],test_coords[1]))
 
         # check for simple vertical movement for white pawn
         else:
             test_coords[1] += 1
-            self.check_square(test_coords, pawn)
+            # make sure empty - no capture
+            if self.get_square((test_coords[0], test_coords[1])).get_piece() == None:
+                pawn.add_valid_move((test_coords[0], test_coords[1]))
             if test_coords[1] <= 7:
+                # check for initial two square jump
                 if pawn.has_moved == "no" and self.check_square(test_coords, pawn) != "break":
                     test_coords[1] += 1
-                    self.check_square(test_coords, pawn)
+                    # make sure empty - no capture
+                    if self.get_square((test_coords[0], test_coords[1])).get_piece() == None:
+                        pawn.add_valid_move((test_coords[0], test_coords[1]))
 
         # check for potential captures for black pawn
         if pawn.get_color() == "black":
