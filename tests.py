@@ -58,7 +58,17 @@ class BasicPlay(unittest.TestCase):
         #king can move itself out of check TODO
 
     def test_checkmate(self):
-        pass
+        chess = game.Game()
+        chess.initialize_squares()
+        chess.initialize_pieces()
+        chess.refresh_valid_moves()
+
+        self.assertEqual(chess.make_move('e2', 'e4'), True)
+        self.assertEqual(chess.make_move('f7', 'f5'), True)
+        self.assertEqual(chess.make_move('e4', 'f5'), True)
+        self.assertEqual(chess.make_move('g7', 'g5'), True)
+        self.assertEqual(chess.make_move('d1', 'h5'), True)
+        self.assertEqual(chess.get_game_state(), "CHECKMATE")
 
     def test_stalemate(self):
         pass
