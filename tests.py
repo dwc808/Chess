@@ -6,9 +6,6 @@ class BasicPlay(unittest.TestCase):
     def test_normal_play(self):
         """Test a basic set of moves, taking normal turns."""
         chess = game.Game()
-        chess.initialize_squares()
-        chess.initialize_pieces()
-        chess.refresh_valid_moves()
 
         self.assertEqual(chess.make_move('b2','b3'), True)
         self.assertEqual(chess.make_move('e7','e5'), True)
@@ -29,9 +26,6 @@ class BasicPlay(unittest.TestCase):
 
     def test_check_and_check_mate(self):
         chess = game.Game()
-        chess.initialize_squares()
-        chess.initialize_pieces()
-        chess.refresh_valid_moves()
 
         self.assertEqual(chess.make_move('e2', 'e3'), True)
         self.assertEqual(chess.make_move('d7', 'd6'), True)
@@ -58,10 +52,8 @@ class BasicPlay(unittest.TestCase):
         #king can move itself out of check TODO
 
     def test_checkmate(self):
+        """Test that checkmate occurs when a player is in check and has no valid moves."""
         chess = game.Game()
-        chess.initialize_squares()
-        chess.initialize_pieces()
-        chess.refresh_valid_moves()
 
         self.assertEqual(chess.make_move('e2', 'e4'), True)
         self.assertEqual(chess.make_move('f7', 'f5'), True)
@@ -71,15 +63,44 @@ class BasicPlay(unittest.TestCase):
         self.assertEqual(chess.get_game_state(), "CHECKMATE")
 
     def test_stalemate(self):
-        pass
+        """Test that stalemate occurs when a player has no valid moves but is not in check."""
+        chess = game.Game()
+
+        for piece in chess._pieces.values():
+            piece.set_position((10, 10))
+            piece.set_status("dead")
+            piece.clear_valid_moves()
+
+        for square in chess._squares.values():
+            square.set_piece(None)
+
+        # initialize pieces
+        chess._pieces['black_king'].set_position((0, 7))
+        chess._pieces['black_king'].set_status("alive")
+        chess._pieces['white_king'].set_position((2, 3))
+        chess._pieces['white_king'].set_status("alive")
+        chess._pieces['white_queen'].set_position((5, 6))
+        chess._pieces['white_queen'].set_status("alive")
+
+        chess._squares["f7"].set_piece(chess._pieces["white_queen"])
+        chess._squares["a8"].set_piece(chess._pieces["black_king"])
+        chess._squares["c4"].set_piece(chess._pieces["white_king"])
+
+        chess.print_board()
+        chess.refresh_valid_moves()
+
+        chess.make_move('f7', 'c7')
+
+        self.assertEqual(chess.get_game_state(), "STALEMATE")
+
+
+
 
 class SpecialMoves(unittest.TestCase):
 
     def test_enpassant(self):
         chess = game.Game()
-        chess.initialize_squares()
-        chess.initialize_pieces()
-        chess.refresh_valid_moves()
+
         self.assertEqual(chess.make_move('f2', 'f4'), True)
         self.assertEqual(chess.make_move('c7', 'c6'), True)
         self.assertEqual(chess.make_move('f4', 'f5'), True)
@@ -114,9 +135,7 @@ class InvalidMoves(unittest.TestCase):
     def test_invalid_pawn_captures(self):
 
         chess = game.Game()
-        chess.initialize_squares()
-        chess.initialize_pieces()
-        chess.refresh_valid_moves()
+
         self.assertEqual(chess.make_move('b2', 'b3'), True)
         self.assertEqual(chess.make_move('e7', 'e5'), True)
         self.assertEqual(chess.make_move('g1', 'h3'), True)

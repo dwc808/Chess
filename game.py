@@ -17,7 +17,6 @@ class Game:
         self.print_board()
         self.refresh_valid_moves()
 
-
     def initialize_squares(self):
         """This method creates the Squares for the board. Each Square is initialized
         with x and y coordinates, a name that matches the coordinates a player will use
@@ -343,14 +342,21 @@ class Game:
             test_coords[0] -= 1
             self.check_square(test_coords, king)
 
+        #remove moves that would place king in check
+        check_moves = []
+
         if king.get_color() == "white":
-            for move in king.get_valid_moves():
-                if move in self._black_valid_moves:
-                    king._valid_moves.remove(move)
+            for moveset in self._black_valid_moves:
+                for move in moveset:
+                    if move in king.get_valid_moves():
+                        check_moves.append(move)
         else:
-            for move in king.get_valid_moves():
-                if move in self._white_valid_moves:
-                    king._valid_moves.remove(move)
+            for moveset in self._white_valid_moves:
+                for move in moveset:
+                    if move in king.get_valid_moves():
+                        check_moves.append(move)
+
+        king._valid_moves = [move for move in king._valid_moves if move not in check_moves]
 
     def get_knight_moves(self, knight):
         """This method takes a knight object as a parameter. It will refresh the valid moves
@@ -813,12 +819,6 @@ class Game:
         if self._pieces["black_bishop_2"].get_status() == "alive":
             self.get_bishop_moves(self._pieces["black_bishop_2"])
 
-        if self._pieces["white_king"].get_status() == "alive":
-            self.get_king_moves(self._pieces["white_king"])
-
-        if self._pieces["black_king"].get_status() == "alive":
-            self.get_king_moves(self._pieces["black_king"])
-
         if self._pieces["white_knight"].get_status() == "alive":
             self.get_knight_moves(self._pieces["white_knight"])
 
@@ -836,6 +836,12 @@ class Game:
 
         if self._pieces["black_queen"].get_status() == "alive":
             self.get_queen_moves(self._pieces["black_queen"])
+
+        if self._pieces["white_king"].get_status() == "alive":
+            self.get_king_moves(self._pieces["white_king"])
+
+        if self._pieces["black_king"].get_status() == "alive":
+            self.get_king_moves(self._pieces["black_king"])
 
         for number in range(1,9):
             if self._pieces["black_pawn" + str(number)].get_status() == "alive":
