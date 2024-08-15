@@ -280,6 +280,90 @@ class Game:
             if check_stop == "break":
                 break
 
+    def can_castle(self, king):
+        """Determines if the king can castle to either side."""
+
+        kside_castle = True
+        qside_castle = True
+
+        #has king moved?
+        if king.get_moved() == True:
+            return
+
+        #is king in check?
+        if king.in_check() == True:
+            return
+
+        #white king only
+        if king.get_color() == "white":
+            castle_r = self._pieces["white_castle_2"]
+            castle_l = self._pieces["white_castle"]
+
+            #kingside
+            #has castle moved?
+            if castle_r.get_moved() == True:
+                kside_castle = False
+            #are middle squares empty?
+            if self._squares["f1"].is_empty() == False or self._squares["g1"].is_empty() == False:
+                kside_castle = False
+            #would king move through check?
+            for moveset in self._black_valid_moves:
+                if self._squares["f1"].get_coords() in moveset or self._squares["g1"].get_coords() in moveset:
+                    kside_castle = False
+            #castling valid
+            if kside_castle == True:
+                king.add_valid_move((6,0))
+
+            #queenside
+            # has castle moved?
+            if castle_l.get_moved() == True:
+                qside_castle = False
+            # are middle squares empty?
+            if self._squares["c1"].is_empty() == False or self._squares["d1"].is_empty() == False:
+                qside_castle = False
+            # would king move through check?
+            for moveset in self._black_valid_moves:
+                if self._squares["c1"].get_coords() in moveset or self._squares["d1"].get_coords() in moveset:
+                    qside_castle = False
+            # castling valid
+            if qside_castle == True:
+                king.add_valid_move((2, 0))
+
+        #black_king only
+        if king.get_color() == "black":
+            castle_r = self._pieces["black_castle_2"]
+            castle_l = self._pieces["black_castle"]
+
+            # kingside
+            # has castle moved?
+            if castle_r.get_moved() == True:
+                kside_castle = False
+            # are middle squares empty?
+            if self._squares["f8"].is_empty() == False or self._squares["g8"].is_empty() == False:
+                kside_castle = False
+            # would king move through check?
+            for moveset in self._white_valid_moves:
+                if self._squares["f8"].get_coords() in moveset or self._squares["g8"].get_coords() in moveset:
+                    kside_castle = False
+            # castling valid
+            if kside_castle == True:
+                king.add_valid_move((6, 7))
+
+            # queenside
+            # has castle moved?
+            if castle_l.get_moved() == True:
+                qside_castle = False
+            # are middle squares empty?
+            if self._squares["c8"].is_empty() == False or self._squares["d8"].is_empty() == False:
+                qside_castle = False
+            # would king move through check?
+            for moveset in self._white_valid_moves:
+                if self._squares["c8"].get_coords() in moveset or self._squares["d8"].get_coords() in moveset:
+                    qside_castle = False
+            # castling valid
+            if qside_castle == True:
+                king.add_valid_move((2, 7))
+
     def get_king_moves(self, king):
         """This method takes a castle object as a parameter. It will refresh the valid moves
         for that piece, given the current state of the board. It makes use of the check_square
@@ -341,6 +425,9 @@ class Game:
             test_coords[1] += 1
             test_coords[0] -= 1
             self.check_square(test_coords, king)
+
+        #test castling
+        self.can_castle(king)
 
         #remove moves that would place king in check
         check_moves = []
@@ -923,6 +1010,43 @@ class Game:
             if self._turn == "black" and all(not moves for moves in self._black_valid_moves):
                 self._game_state = "STALEMATE"
 
+    def castle(self, king, king_square, moving_square):
+        """Handles moving the castle to the correct location. The king will be moved
+        in the normal course of the make_move function."""
+        if self._squares[king_square].get_coords()[1] == 0:
+            if self._squares[moving_square] == self._squares["g1"].get_coords:
+                castle = self._pieces["white_castle_2"]
+                castle.set_position((5,0))
+                self.get_square((5,0)).set_piece(castle)
+            else:
+                castle = self._pieces["white_castle"]
+                castle.set_position((3,0))
+                self.get_square((3,0)).set_piece(castle)
+        else:
+            if self._squares[moving_square].get_coords == self._squares["g8"].get_coords:
+                castle = self._pieces["black_castle_2"]
+                castle.set_position((5,7))
+                self.get_square((5,7)).set_piece(castle)
+            else:
+                castle = self._pieces["black_castle"]
+                castle.set_position((3, 7))
+                self.get_square((3, 7)).set_piece(castle)
+
+    def trade_piece(self, piece, square):
+        """Trades a pawn for a captured piece."""
+
+        #find out which piece the player wants to promote to
+        new_piece = input("Which piece do you want to promote the pawn to?")
+
+        if new_piece.lower() == "queen":
+
+        if new_piece.lower() == "castle":
+
+        if new_piece.lower() == "knight":
+
+        if new_piece.lower() == "bishop":
+
+
     def make_move(self, square_1, square_2):
         """This method is the command to move a piece. It takes two parameters, both strings,
         with the coordinates of the square to move from, and the square to move to. For example,
@@ -984,7 +1108,22 @@ class Game:
                                 piece_2 = self._vulnerable
                                 en_passant = True
 
-                #en passant - do the capture
+                #TODO - put these pawn cases in a single branch - maybe another function
+                #check if pawn has moved to other end of board for trade
+                if piece.get_name() == "pawn":
+                    if piece.get_color() == "white":
+                        if self._squares[square_2].get_coords()[2] == 7:
+                            piece = trade_piece(piece, square_2)
+                    else:
+                        if self._squares[square_2].get_coords()[2] == 0:
+                            piece = trade_piece(piece, square_2)
+
+                # castling
+                if piece.get_name() == "king":
+                    if abs(self._squares[square_1].get_coords()[0] - self._squares[square_2].get_coords()[0]) > 1:
+                        self.castle(piece, square_1, square_2)
+
+                # en passant - do the capture
                 if en_passant == True:
                     piece_2.set_position((10, 10))
                     capture_square.set_piece(None)
@@ -995,9 +1134,13 @@ class Game:
                 self._squares[square_1].set_piece(None)
                 self._squares[square_2].set_piece(piece)
                 piece.set_position(self._squares[square_2].get_coords())
+                #TODO - fix so pawn/castle/king can all be in one spot here
                 if piece.get_name() == "pawn":
                     if piece.has_moved == "no":
                         piece.has_moved = "yes"
+                if piece.get_name() == "king" or piece.get_name() == "castle":
+                    if piece.has_moved == False:
+                        piece.has_moved = True
 
             else:
 
@@ -1015,6 +1158,10 @@ class Game:
                 if piece.get_name() == "pawn":
                     if piece.has_moved == "no":
                         piece.has_moved = "yes"
+
+                if piece.get_name() == "king" or piece.get_name() == "castle":
+                    if piece.has_moved == False:
+                        piece.has_moved = True
 
         else:
             return False

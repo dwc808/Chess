@@ -81,6 +81,8 @@ class BasicPlay(unittest.TestCase):
         chess._pieces['white_king'].set_status("alive")
         chess._pieces['white_queen'].set_position((5, 6))
         chess._pieces['white_queen'].set_status("alive")
+        chess._pieces['white_king'].has_moved = True
+        chess._pieces['black_king'].has_moved = True
 
         chess._squares["f7"].set_piece(chess._pieces["white_queen"])
         chess._squares["a8"].set_piece(chess._pieces["black_king"])
@@ -124,7 +126,18 @@ class SpecialMoves(unittest.TestCase):
         self.assertEqual(chess.make_move('b4', 'a3'), False)
 
     def test_castle(self):
-        pass
+        chess = game.Game()
+        chess.make_move("b1", "a3")
+        chess.make_move("h7", "h6")
+        chess.make_move("b2", "b3")
+        chess.make_move("h6", "h5")
+        chess.make_move("c1","b2")
+        chess.make_move("h5", "h4")
+        chess.make_move("e2", "e3")
+        chess.make_move("h4", "h3")
+        chess.make_move("d1","e2")
+        chess.make_move("h3", "g2")
+        self.assertEqual(chess.make_move("e1","c1"), True)
 
     def test_revive(self):
         pass

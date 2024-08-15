@@ -68,6 +68,7 @@ class King(Piece):
         else:
             self._icon = "K"
         self._check = False
+        self.has_moved = False
 
     def get_icon(self):
         """Returns the King's icon in the appropriate color."""
@@ -76,6 +77,10 @@ class King(Piece):
     def in_check(self):
         """Returns True if in Check, False otherwise"""
         return self._check
+
+    def get_moved(self):
+        """Returns True if piece has been moved, False otherwise."""
+        return self.has_moved
 
 
 class Castle(Piece):
@@ -90,11 +95,15 @@ class Castle(Piece):
             self._icon = "C"
         else:
             self._icon = "C"
+        self.has_moved = False
 
     def get_icon(self):
         """Returns the Castle's icon in the appropriate color."""
         return self._icon
 
+    def get_moved(self):
+        """Returns True if piece has been moved, False otherwise."""
+        return self.has_moved
 
 class Bishop(Piece):
     """"This piece represents the Bishop. It has all of the piece data members and methods, plus a new data member,
