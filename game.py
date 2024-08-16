@@ -6,6 +6,8 @@ class Game:
     def __init__(self):
         self._squares = {}
         self._pieces = {}
+        self._white_pieces = []
+        self._black_pieces = []
         self._all_valid_moves = []
         self._white_valid_moves = []
         self._black_valid_moves = []
@@ -103,6 +105,9 @@ class Game:
             self._squares[letter + "2"].set_piece(self._pieces['white_pawn' + str(y_name)])
             starter += 1
             y_name += 1
+
+        #add all pieces to team list
+        self.team_pieces()
 
     def print_board(self):
         """This method prints the current state of the board. It takes no parameters. It cycles through
@@ -882,61 +887,26 @@ class Game:
         #null value to return if there is no check
         checking_piece = None
 
-        if self._pieces["white_castle"].get_status() == "alive":
-            self.get_castle_moves(self._pieces["white_castle"])
+        for piece in self._pieces.values():
+            name = piece.get_name()
+            status = piece.get_status()
 
-        if self._pieces["black_castle"].get_status() == "alive":
-            self.get_castle_moves(self._pieces["black_castle"])
+            if status == "alive":
+                match name:
+                    case "pawn":
+                        self.get_pawn_moves(piece)
+                    case "queen":
+                        self.get_queen_moves(piece)
+                    case "bishop":
+                        self.get_bishop_moves(piece)
+                    case "knight":
+                        self.get_knight_moves(piece)
+                    case "castle":
+                        self.get_castle_moves(piece)
 
-        if self._pieces["white_castle_2"].get_status() == "alive":
-            self.get_castle_moves(self._pieces["white_castle_2"])
-
-        if self._pieces["black_castle_2"].get_status() == "alive":
-            self.get_castle_moves(self._pieces["black_castle_2"])
-
-        if self._pieces["white_bishop"].get_status() == "alive":
-            self.get_bishop_moves(self._pieces["white_bishop"])
-
-        if self._pieces["white_bishop_2"].get_status() == "alive":
-            self.get_bishop_moves(self._pieces["white_bishop_2"])
-
-        if self._pieces["black_bishop"].get_status() == "alive":
-            self.get_bishop_moves(self._pieces["black_bishop"])
-
-        if self._pieces["black_bishop_2"].get_status() == "alive":
-            self.get_bishop_moves(self._pieces["black_bishop_2"])
-
-        if self._pieces["white_knight"].get_status() == "alive":
-            self.get_knight_moves(self._pieces["white_knight"])
-
-        if self._pieces["white_knight_2"].get_status() == "alive":
-            self.get_knight_moves(self._pieces["white_knight_2"])
-
-        if self._pieces["black_knight"].get_status() == "alive":
-            self.get_knight_moves(self._pieces["black_knight"])
-
-        if self._pieces["black_knight_2"].get_status() == "alive":
-            self.get_knight_moves(self._pieces["black_knight_2"])
-
-        if self._pieces["white_queen"].get_status() == "alive":
-            self.get_queen_moves(self._pieces["white_queen"])
-
-        if self._pieces["black_queen"].get_status() == "alive":
-            self.get_queen_moves(self._pieces["black_queen"])
-
-        if self._pieces["white_king"].get_status() == "alive":
+            #refresh king moves last so potential check will register
             self.get_king_moves(self._pieces["white_king"])
-
-        if self._pieces["black_king"].get_status() == "alive":
             self.get_king_moves(self._pieces["black_king"])
-
-        for number in range(1,9):
-            if self._pieces["black_pawn" + str(number)].get_status() == "alive":
-                self.get_pawn_moves(self._pieces["black_pawn" + str(number)])
-
-        for number in range(1,9):
-            if self._pieces["white_pawn" + str(number)].get_status() == "alive":
-                self.get_pawn_moves(self._pieces["white_pawn" + str(number)])
 
         self._all_valid_moves.clear()
         self._white_valid_moves.clear()
@@ -1032,20 +1002,132 @@ class Game:
                 castle.set_position((3, 7))
                 self.get_square((3, 7)).set_piece(castle)
 
+    def team_pieces(self):
+        """Creates lists of pieces on each team."""
+
+        for piece in self._pieces.values():
+            if piece.get_color() == "white":
+                self._white_pieces.append(piece)
+            else:
+                self._black_pieces.append(piece)
+
     def trade_piece(self, piece, square):
-        """Trades a pawn for a captured piece."""
+        """Promotes a pawn to a queen, castle, bishop, or knight."""
+
+        #get actual square
+        square = self._squares[square]
 
         #find out which piece the player wants to promote to
         new_piece = input("Which piece do you want to promote the pawn to?")
+        color = piece.get_color()
 
         if new_piece.lower() == "queen":
+            if color == "white":
+                #count queens
+                queen_number = 0
+                for piece in self._white_pieces:
+                    if piece.get_name == "queen":
+                        queen_number += 1
+                #create new queen
+                queen_number += 1
+                self._pieces["white_queen_" + str(queen_number)] = Queen("white", "queen", square.get_coords(), "alive")
+                new_piece = self._pieces["white_queen_" + str(queen_number)]
+                self._white_pieces.append(new_piece)
+                return new_piece
+
+            else:
+                # count queens
+                queen_number = 0
+                for piece in self._black_pieces:
+                    if piece.get_name == "queen":
+                        queen_number += 1
+                # create new queen
+                queen_number += 1
+                self._pieces["black_queen_" + str(queen_number)] = Queen("black", "queen", square.get_coords(), "alive")
+                new_piece = self._pieces["black_queen_" + str(queen_number)]
+                self._black_pieces.append(new_piece)
+                return new_piece
 
         if new_piece.lower() == "castle":
+            if color == "white":
+                # count castles
+                castle_number = 0
+                for piece in self._white_pieces:
+                    if piece.get_name == "castle":
+                        castle_number += 1
+                # create new castle
+                castle_number += 1
+                self._pieces["white_castle_" + str(castle_number)] = Castle("white", "castle", square.get_coords(), "alive")
+                new_piece = self._pieces["white_castle_" + str(castle_number)]
+                self._white_pieces.append(new_piece)
+                return new_piece
+
+            else:
+                # count castles
+                castle_number = 0
+                for piece in self._black_pieces:
+                    if piece.get_name == "castle":
+                        castle_number += 1
+                # create new castle
+                castle_number += 1
+                self._pieces["black_castle_" + str(castle_number)] = Castle("black", "castle", square.get_coords(), "alive")
+                new_piece = self._pieces["black_castle_" + str(castle_number)]
+                self._black_pieces.append(new_piece)
+                return new_piece
 
         if new_piece.lower() == "knight":
+            if color == "white":
+                # count knights
+                knight_number = 0
+                for piece in self._white_pieces:
+                    if piece.get_name == "knight":
+                        knight_number += 1
+                # create new knight
+                knight_number += 1
+                self._pieces["white_knight_" + str(knight_number)] = Knight("white", "knight", square.get_coords(), "alive")
+                new_piece = self._pieces["white_knight_" + str(knight_number)]
+                self._white_pieces.append(new_piece)
+                return new_piece
+
+            else:
+                # count knights
+                knight_number = 0
+                for piece in self._black_pieces:
+                    if piece.get_name == "knight":
+                        knight_number += 1
+                # create new knight
+                knight_number += 1
+                self._pieces["black_knight_" + str(knight_number)] = Knight("black", "knight", square.get_coords(), "alive")
+                new_piece = self._pieces["black_knight_" + str(knight_number)]
+                self._black_pieces.append(new_piece)
+                return new_piece
 
         if new_piece.lower() == "bishop":
+            if color == "white":
+                # count bishops
+                bishop_number = 0
+                for piece in self._white_pieces:
+                    if piece.get_name == "bishop":
+                        bishop_number += 1
+                # create new bishop
+                bishop_number += 1
+                self._pieces["white_bishop_" + str(bishop_number)] = Bishop("white", "bishop", square.get_coords(), "alive")
+                new_piece = self._pieces["white_bishop_" + str(bishop_number)]
+                self._white_pieces.append(new_piece)
+                return new_piece
 
+            else:
+                # count bishops
+                bishop_number = 0
+                for piece in self._black_pieces:
+                    if piece.get_name == "bishop":
+                        bishop_number += 1
+                # create new bishop
+                bishop_number += 1
+                self._pieces["black_bishop_" + str(bishop_number)] = Bishop("black", "bishop", square.get_coords(), "alive")
+                new_piece = self._pieces["black_bishop_" + str(bishop_number)]
+                self._black_pieces.append(new_piece)
+                return new_piece
 
     def make_move(self, square_1, square_2):
         """This method is the command to move a piece. It takes two parameters, both strings,
@@ -1109,14 +1191,24 @@ class Game:
                                 en_passant = True
 
                 #TODO - put these pawn cases in a single branch - maybe another function
-                #check if pawn has moved to other end of board for trade
+                #Promotion - when moving to blank square
                 if piece.get_name() == "pawn":
                     if piece.get_color() == "white":
-                        if self._squares[square_2].get_coords()[2] == 7:
-                            piece = trade_piece(piece, square_2)
+                        if self._squares[square_2].get_coords()[1] == 7:
+                            new_piece = self.trade_piece(piece, square_2)
+                            piece.set_position((10, 10))
+                            piece.set_status("dead")
+                            self._squares[square_2].set_piece(new_piece)
+                            # clear old pawn's valid moves
+                            piece.clear_valid_moves()
                     else:
-                        if self._squares[square_2].get_coords()[2] == 0:
-                            piece = trade_piece(piece, square_2)
+                        if self._squares[square_2].get_coords()[1] == 0:
+                            new_piece = self.trade_piece(piece, square_2)
+                            piece.set_position((10, 10))
+                            piece.set_status("dead")
+                            self._squares[square_2].set_piece(new_piece)
+                            # clear old pawn's valid moves
+                            piece.clear_valid_moves()
 
                 # castling
                 if piece.get_name() == "king":
@@ -1154,6 +1246,25 @@ class Game:
                 self._squares[square_1].set_piece(None)
                 self._squares[square_2].set_piece(piece)
                 piece.set_position(self._squares[square_2].get_coords())
+
+                # Promotion - after capturing piece
+                if piece.get_name() == "pawn":
+                    if piece.get_color() == "white":
+                        if self._squares[square_2].get_coords()[1] == 7:
+                            new_piece = self.trade_piece(piece, square_2)
+                            piece.set_position((10,10))
+                            piece.set_status("dead")
+                            self._squares[square_2].set_piece(new_piece)
+                            #clear old pawn's valid moves
+                            piece.clear_valid_moves()
+                    else:
+                        if self._squares[square_2].get_coords()[1] == 0:
+                            new_piece = self.trade_piece(piece, square_2)
+                            piece.set_position((10,10))
+                            piece.set_status("dead")
+                            self._squares[square_2].set_piece(new_piece)
+                            # clear old pawn's valid moves
+                            piece.clear_valid_moves()
 
                 if piece.get_name() == "pawn":
                     if piece.has_moved == "no":

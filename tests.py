@@ -139,8 +139,29 @@ class SpecialMoves(unittest.TestCase):
         chess.make_move("h3", "g2")
         self.assertEqual(chess.make_move("e1","c1"), True)
 
-    def test_revive(self):
-        pass
+    def test_promotion(self):
+        chess = game.Game()
+        self.assertEqual(chess.make_move('f2', 'f4'), True)
+        self.assertEqual(chess.make_move('c7', 'c6'), True)
+        self.assertEqual(chess.make_move('f4', 'f5'), True)
+        self.assertEqual(chess.make_move('e7', 'e5'), True)
+        self.assertEqual(chess.make_move('f5', 'e5'), False)
+        self.assertEqual(chess.make_move('f5', 'e6'), True)
+        self.assertEqual(chess.make_move('c6', 'c5'), True)
+        self.assertEqual(chess.make_move('h2', 'h3'), True)
+        self.assertEqual(chess.make_move('c5', 'c4'), True)
+        self.assertEqual(chess.make_move('d2', 'd4'), True)
+        self.assertEqual(chess.make_move('c4', 'd4'), False)
+        self.assertEqual(chess.make_move('c4', 'd3'), True)
+        self.assertEqual(chess.make_move('a2', 'a4'), True)
+        self.assertEqual(chess.make_move('b7', 'b5'), True)
+        self.assertEqual(chess.make_move('h3', 'h4'), True)
+        self.assertEqual(chess.make_move('b5', 'b4'), True)
+        self.assertEqual(chess.make_move('h4', 'h5'), True)
+        chess.make_move('d3','d2')
+        chess.make_move('e1', 'f2')
+        self.assertEqual(chess.make_move('d2', 'c1'), True)
+
 
 class InvalidMoves(unittest.TestCase):
     """Test moves that should be disallowed."""
