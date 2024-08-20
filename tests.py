@@ -96,8 +96,6 @@ class BasicPlay(unittest.TestCase):
         self.assertEqual(chess.get_game_state(), "STALEMATE")
 
 
-
-
 class SpecialMoves(unittest.TestCase):
 
     def test_enpassant(self):
