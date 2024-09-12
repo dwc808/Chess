@@ -10,3 +10,4 @@ This game is still in progress. All chess rules have been implemented and tested
 - Implement an AI opponent
 - Continue to refactor, improving readability and moving more functionality into the Piece class
 - Improve test coverage
+- Rewrite docstrings to be more concise and follow more standard format
